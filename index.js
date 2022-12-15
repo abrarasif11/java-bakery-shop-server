@@ -35,6 +35,15 @@ const categoryCollection = client.db('javabakeryshop').collection('category');
             const allcategories = await cursor.toArray();
             res.send(allcategories);
         });
+        // choose category //
+        app.get("/categories/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = {};
+            const cursor = await allcategoriesCollection.find(query).toArray();
+            const categories = cursor.filter((n) => n.category_id === id);
+            res.send(categories);
+            console.log(categories);
+        });
     }
 
     finally {
