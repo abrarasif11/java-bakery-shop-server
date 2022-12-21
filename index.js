@@ -20,8 +20,10 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 // MongoDB Collection //
 async function run() {
-const categoryCollection = client.db('javabakeryshop').collection('category');
+    const categoryCollection = client.db('javabakeryshop').collection('category');
     const allcategoriesCollection = client.db('javabakeryshop').collection('allcategories');
+    const ordersCollection = client.db('javabakeryshop').collection('orders');
+    const itemsCollection = client.db('javabakeryshop').collection('items')
     try {
         app.get('/categories', async (req, res) => {
             const query = {}
@@ -43,6 +45,31 @@ const categoryCollection = client.db('javabakeryshop').collection('category');
             const categories = cursor.filter((n) => n.category_id === id);
             res.send(categories);
             console.log(categories);
+        });
+        app.post('/orders', async (req, res) => {
+            const order = req.body
+            console.log(order);
+            const result = await ordersCollection.insertOne(order);
+            res.send(result);
+        });
+        app.get("/items", async (req, res) => {
+            const query = {};
+            const cursor = await itemsCollection.find(query);
+            const reviews = await cursor.toArray();
+            const reverseArray = reviews.reverse();
+            res.send(reverseArray);
+        });
+        app.post("/items", async (req, res) => {
+            const items = req.body;
+            const result = await itemsCollection.insertOne(items);
+            res.send(result);
+        });
+        // Email Query //
+        app.get("/items", async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const cursor = await itemsCollection.find(query).toArray();;
+            res.send(cursor);
         });
     }
 
