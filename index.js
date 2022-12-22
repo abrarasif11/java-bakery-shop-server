@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
@@ -24,6 +24,7 @@ async function run() {
     const allcategoriesCollection = client.db('javabakeryshop').collection('allcategories');
     const ordersCollection = client.db('javabakeryshop').collection('orders');
     const itemsCollection = client.db('javabakeryshop').collection('items')
+    const userCollection = client.db('javabakeryshop').collection('users')
     try {
         app.get('/categories', async (req, res) => {
             const query = {}
@@ -70,6 +71,59 @@ async function run() {
             const query = { email: email };
             const cursor = await itemsCollection.find(query).toArray();;
             res.send(cursor);
+        });
+        //   JWT TOKen //
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query)
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+                return res.send({ accessToken: token })
+            }
+            res.status(403).send({ accessToken: '' })
+            console.log(user);
+            res.send({ accessToken: 'token' })
+        });
+        // user list // 
+        app.get("/usersList", async (req, res) => {
+            const query = {};
+            const cursor = await userCollection.find(query);
+            const reviews = await cursor.toArray();
+            const reverseArray = reviews.reverse();
+            res.send(reverseArray);
+        });
+        app.post("/usersList", async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        });
+        app.put("/usersList/admin/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const option = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, option,);
+            console.log(result);
+            res.send(result);
+        });
+        app.get('/usersList/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await userCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'admin' });
+        });
+        // admin delete //
+        app.delete("/usersList/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await userCollection.deleteOne(query);
+            console.log(result);
+            res.send(result);
         });
     }
 
