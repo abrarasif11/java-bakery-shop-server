@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
@@ -18,6 +19,20 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// function verifyJWT(req, res, next) {
+//     const authHeader = req.headers.authorization;
+//     if (!authHeader) {
+//         return res.status(401).send({ message: 'unauthorized access' })
+//     }
+//     const token = authHeader.split(' ')[1];
+//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+//         if (err) {
+//             return res.status(401).send({ message: 'Forbidden access' })
+//         }
+//         req.decoded = decoded;
+//         next();
+//     })
+// }
 // MongoDB Collection //
 async function run() {
     const categoryCollection = client.db('javabakeryshop').collection('category');
@@ -73,18 +88,12 @@ async function run() {
             res.send(cursor);
         });
         //   JWT TOKen //
-        app.get('/jwt', async (req, res) => {
-            const email = req.query.email;
-            const query = { email: email };
-            const user = await userCollection.findOne(query)
-            if (user) {
-                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
-                return res.send({ accessToken: token })
-            }
-            res.status(403).send({ accessToken: '' })
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ token })
             console.log(user);
-            res.send({ accessToken: 'token' })
-        });
+        })
         // user list // 
         app.get("/usersList", async (req, res) => {
             const query = {};
@@ -125,6 +134,7 @@ async function run() {
             console.log(result);
             res.send(result);
         });
+        
     }
 
     finally {
