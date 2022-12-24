@@ -40,6 +40,8 @@ async function run() {
     const ordersCollection = client.db('javabakeryshop').collection('orders');
     const itemsCollection = client.db('javabakeryshop').collection('items')
     const userCollection = client.db('javabakeryshop').collection('users')
+    const addItemsCollection = client.db('javabakeryshop').collection('addItems')
+    const reviewCollection = client.db('javabakeryshop').collection('review')
     try {
         app.get('/categories', async (req, res) => {
             const query = {}
@@ -78,6 +80,26 @@ async function run() {
         app.post("/items", async (req, res) => {
             const items = req.body;
             const result = await itemsCollection.insertOne(items);
+            res.send(result);
+        });
+        // add items // 
+        app.get('/allitems', async (req, res) => {
+            const query = {}
+            const cursor = addItemsCollection.find(query);
+            const addItems = await cursor.toArray();
+            res.send(addItems);
+        });
+        // review
+        app.get("/review", async (req, res) => {
+            const query = {};
+            const cursor = await reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            const reverseArray = reviews.reverse();
+            res.send(reverseArray);
+        });
+        app.post("/review", async (req, res) => {
+            const items = req.body;
+            const result = await reviewCollection.insertOne(items);
             res.send(result);
         });
         // Email Query //
@@ -133,10 +155,8 @@ async function run() {
             const result = await userCollection.deleteOne(query);
             console.log(result);
             res.send(result);
-        });
-        
+        }); 
     }
-
     finally {
 
     }
