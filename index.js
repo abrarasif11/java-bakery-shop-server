@@ -42,6 +42,7 @@ async function run() {
     const userCollection = client.db('javabakeryshop').collection('users')
     const addItemsCollection = client.db('javabakeryshop').collection('addItems')
     const reviewCollection = client.db('javabakeryshop').collection('review')
+    const newItemsCollection = client.db('javabakeryshop').collection('newItems')
     try {
         app.get('/categories', async (req, res) => {
             const query = {}
@@ -161,6 +162,26 @@ async function run() {
             const result = await userCollection.deleteOne(query);
             console.log(result);
             res.send(result);
+        });
+        // new item added //
+        app.get("/newItems", async (req, res) => {
+            const query = {};
+            const cursor = await newItemsCollection.find(query);
+            const posts = await cursor.toArray();
+            const reverseArray = posts.reverse();
+            res.send(reverseArray);
+        });
+        app.post("/newItems", async (req, res) => {
+            const items = req.body;
+            const result = await newItemsCollection.insertOne(items);
+            res.send(result);
+        });
+       
+        app.get("/newItems", async (req, res) => {
+            const id = req.query.id;
+            const query = { _id: ObjectId(id) };
+            const cursor = await newItemsCollection.find(query).toArray();;
+            res.send(cursor);
         }); 
     }
     finally {
